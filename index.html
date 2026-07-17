@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>籃球聯賽賽程表</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f3f4f6; padding: 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: #111827; }
+        .match-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .match-info { text-align: center; color: #6b7280; font-size: 0.9em; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .scoreboard { display: flex; justify-content: space-between; align-items: center; }
+        .team { display: flex; flex-direction: column; align-items: center; width: 30%; }
+        .team-logo { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }
+        .team-name { font-weight: 600; color: #374151; font-size: 1.1em; text-align: center; }
+        .score-box { width: 40%; text-align: center; }
+        .score-text { font-size: 2.2em; font-weight: 800; color: #1f2937; letter-spacing: 2px; }
+        .vs-text { font-size: 1.2em; font-weight: 600; color: #9ca3af; }
+        
+        /* 新增媒體按鈕區塊的樣式 */
+        .media-links { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .media-btn { background-color: #f3f4f6; color: #374151; text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; transition: background-color 0.2s; }
+        .media-btn:hover { background-color: #e5e7eb; }
+        .media-btn.photo { background-color: #e0f2fe; color: #0369a1; }
+        .media-btn.photo:hover { background-color: #bae6fd; }
+        .media-btn.video { background-color: #fee2e2; color: #b91c1c; }
+        .media-btn.video:hover { background-color: #fecaca; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏀 賽季賽程與賽事紀錄</h1>
+    <div id="schedule-container">資料載入中...</div>
+</div>
+
+<script>
+    // 將你的 CSV 網址貼在下方引號內
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsj3AtyZ5MaLlFq5upWgAbii-HhuUwR5UF6UR9DyhwP21zL7B40k9XHJRxvXP4isymusKVSvY5AuL/pub?output=csv';
+
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csvText => {
+            const rows = csvText.split('\n').slice(1);
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = ''; 
+
+            rows.forEach(row => {
+                const cols = row.split(',').map(item => item.trim());
+                if (cols.length < 7 || !cols[0]) return; 
+
+                // 對應你新的 A~N 欄位設計 (陣列索引從 0 開始)
+                const date = cols[0];         // A欄
+                const time = cols[1];         // B欄
+                const location = cols[2];     // C欄
+                const team1Name = cols[3];    // D欄
+                const team1Logo = cols[4] || 'https://via.placeholder.com/60?text=T1'; // E欄
+                const team1Score = cols[5] ? cols[5].replace('\r', '') : '';             // F欄
+                const team2Name = cols[6];    // G欄
+                const team2Logo = cols[7] || 'https://via.placeholder.com/60?text=T2'; // H欄
+                const team2Score = cols[8] ? cols[8].replace('\r', '') : '';             // I欄
+                
+                // 讀取新增的媒體連結欄位 (J~N)
+                const photoLink = cols[9] ? cols[9].replace('\r', '') : '';  // J欄
+                const q1Link = cols[10] ? cols[10].replace('\r', '') : '';   // K欄
+                const q2Link = cols[11] ? cols[11].replace('\r', '') : '';   // L欄
+                const q3Link = cols[12] ? cols[12].replace('\r', '') : '';   // M欄
+                const q4Link = cols[13] ? cols[13].replace('\r', '') : '';   // N欄
+                
+                // 判斷分數顯示
+                const scoreDisplay = (team1Score !== '' && team2Score !== '') 
+                    ? `<div class="score-text">${team1Score} - ${team2Score}</div>` 
+                    : `<div class="vs-text">VS</div>`;
+
+                // 產生媒體按鈕的 HTML (有網址才產生)
+                let mediaHtml = '';
+                if (photoLink || q1Link || q2Link || q3Link || q4Link) {
+                    mediaHtml += `<div class="media-links">`;
+                    if (photoLink) mediaHtml += `<a href="${photoLink}" target="_blank" class="media-btn photo">📷 照片</a>`;
+                    if (q1Link) mediaHtml += `<a href="${q1Link}" target="_blank" class="media-btn video">🎥 Q1</a>`;
+                    if (q2Link) mediaHtml += `<a href="${q2Link}" target="_blank" class="media-btn video">🎥 Q2</a>`;
+                    if (q3Link) mediaHtml += `<a href="${q3Link}" target="_blank" class="media-btn video">🎥 Q3</a>`;
+                    if (q4Link) mediaHtml += `<a href="${q4Link}" target="_blank" class="media-btn video">🎥 Q4</a>`;
+                    mediaHtml += `</div>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <div class="match-info">
+                        📅 ${date} &nbsp; ⏰ ${time} &nbsp; 📍 ${location}
+                    </div>
+                    <div class="scoreboard">
+                        <div class="team">
+                            <img src="${team1Logo}" alt="${team1Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/60?text=Logo'">
+                            <div class="team-name">${team1Name}</div>
+                        </div>
+                        
+                        <div class="score-box">
+                            ${scoreDisplay}
+                        </div>
+                        
+                        <div class="team">
+                            <img src="${team2Logo}" alt="${team2Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/60?text=Logo'">
+                            <div class="team-name">${team2Name}</div>
+                        </div>
+                    </div>
+                    ${mediaHtml}
+                `;
+                container.appendChild(card);
+            });
+        })
+        .catch(error => {
+            document.getElementById('schedule-container').innerHTML = '載入失敗，請確認 CSV 發布網址是否正確。';
+        });
+</script>
+
+</body>
+</html>
