@@ -26,7 +26,6 @@
         .month-indicator {
             position: relative; min-width: 110px; display: flex; align-items: center;
         }
-        /* 將 Select 隱藏背景與邊框，偽裝成純文字 */
         #month-select {
             background: transparent; color: #f8fafc; border: none; font-size: 1.1em; font-weight: 800; 
             cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; padding-right: 20px; width: 100%;
@@ -55,7 +54,7 @@
         .date-item .day-name { font-size: 0.85em; font-weight: 600; margin-bottom: 4px; }
         .date-item .day-number { font-size: 1.4em; font-weight: 800; }
 
-        /* 賽程卡片設計 (新增 Hover 與 Click 效果) */
+        /* 賽程卡片設計 */
         .match-card { 
             background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); padding: 20px; margin-bottom: 20px; border-radius: 12px; 
             border: 1px solid #334155; box-shadow: 0 8px 16px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
@@ -68,11 +67,18 @@
         .team-logo { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); }
         .team-name { font-weight: 700; color: #f8fafc; font-size: 1em; text-align: center; }
         
-        .score-box { width: 40%; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .score-text { font-size: 2.8em; font-weight: 900; color: #fff; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-family: Impact, "Arial Black", sans-serif; }
+        /* 🌟 全新比分顯示樣式 */
+        .score-box { width: 40%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .score-text { 
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            font-size: 2em; font-family: Impact, "Arial Black", sans-serif; letter-spacing: 1px; 
+        }
+        .score-text .winner { color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .score-text .loser { color: #64748b; font-family: -apple-system, sans-serif; font-weight: 700; opacity: 0.8; text-shadow: none; }
+        .score-text .divider { color: #334155; font-size: 0.5em; font-family: -apple-system, sans-serif; letter-spacing: 0; }
         .vs-text { font-size: 1.2em; font-weight: 700; color: #64748b; }
 
-        /* 🌟 彈出視窗 (Modal) 設計 */
+        /* 彈出視窗 (Modal) 設計 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);
@@ -108,19 +114,16 @@
 <body>
 
 <div class="container">
-    <h1>🏀 聯賽賽程與賽事回放</h1>
+    <h1>🏀 Zero Basketball聯賽賽程</h1>
     
-    <!-- 橫向日期篩選器與可選擇月份 -->
     <div class="date-picker-wrapper">
         <div class="month-indicator">
             <select id="month-select" onchange="handleMonthChange(this.value)">
-                <!-- 月份選項會由 JS 自動生成 -->
             </select>
         </div>
         <div class="dates-carousel">
             <button class="nav-arrow" onclick="scrollDates(-1)">&#10094;</button>
             <div class="dates-list" id="dates-list-container">
-                <!-- 日期項目會由 JS 自動生成 -->
             </div>
             <button class="nav-arrow" onclick="scrollDates(1)">&#10095;</button>
         </div>
@@ -129,12 +132,10 @@
     <div id="schedule-container">資料載入中...</div>
 </div>
 
-<!-- 專屬比賽詳情彈出視窗 (Modal) -->
 <div id="game-modal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <button class="close-btn" onclick="closeModal(true)">&times;</button>
         <div id="modal-body">
-            <!-- 視窗內容由 JS 動態填入 -->
         </div>
     </div>
 </div>
@@ -143,7 +144,7 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsj3AtyZ5MaLlFq5upWgAbii-HhuUwR5UF6UR9DyhwP21zL7B40k9XHJRxvXP4isymusKVSvY5AuL/pub?output=csv';
     
     let allGames = [];
-    let uniqueMonths = {}; // 儲存所有存在的月份 { "2026-07": "Jul 2026" }
+    let uniqueMonths = {}; 
     let currentSelectedMonth = 'all'; 
     let currentSelectedDate = 'all';
 
@@ -160,7 +161,7 @@
                 if (cols.length < 7 || !cols[0]) return; 
 
                 const gameData = {
-                    id: index, // 賦予唯一 ID 以便開啟對應的 Modal
+                    id: index, 
                     date: cols[0], 
                     time: cols[1],
                     location: cols[2],
@@ -178,7 +179,6 @@
                 };
                 allGames.push(gameData);
 
-                // 解析月份並存入 uniqueMonths
                 const d = new Date(gameData.date);
                 if (!isNaN(d)) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -195,12 +195,9 @@
             document.getElementById('schedule-container').innerHTML = '<div style="text-align:center; color:#ef4444;">載入失敗，請確認資料來源。</div>';
         });
 
-    // 1. 建立月份下拉選單
     function buildMonthSelector() {
         const select = document.getElementById('month-select');
-        select.innerHTML = '<option value="all">All Months</option>'; // 預設全部
-        
-        // 依照月份排序
+        select.innerHTML = '<option value="all">All Months</option>'; 
         Object.keys(uniqueMonths).sort().forEach(key => {
             const option = document.createElement('option');
             option.value = key;
@@ -209,20 +206,17 @@
         });
     }
 
-    // 當月份改變時觸發
     function handleMonthChange(monthKey) {
         currentSelectedMonth = monthKey;
-        currentSelectedDate = 'all'; // 切換月份時重置日期選擇
+        currentSelectedDate = 'all'; 
         buildDateCarousel(monthKey);
         renderGames(monthKey, 'all');
     }
 
-    // 2. 建立橫向日期選擇器 (根據選取的月份過濾)
     function buildDateCarousel(monthKey) {
         const container = document.getElementById('dates-list-container');
-        container.innerHTML = ''; // 清空
+        container.innerHTML = ''; 
 
-        // 取得該月份所有的不重複日期
         let filteredDates = [...new Set(allGames.map(g => g.date))].sort();
         if (monthKey !== 'all') {
             filteredDates = filteredDates.filter(dateStr => {
@@ -253,21 +247,18 @@
         });
     }
 
-    // 箭頭左右滑動功能
     function scrollDates(direction) {
         const list = document.getElementById('dates-list-container');
         list.scrollBy({ left: direction * 150, behavior: 'smooth' });
     }
 
-    // 點擊具體日期時觸發
     function filterByDate(clickedDate) {
         if (currentSelectedDate === clickedDate) {
-            currentSelectedDate = 'all'; // 再次點擊取消選取
+            currentSelectedDate = 'all'; 
         } else {
             currentSelectedDate = clickedDate;
         }
 
-        // 更新日期按鈕高亮
         document.querySelectorAll('.date-item').forEach(el => {
             el.classList.remove('active');
             if (el.dataset.date === currentSelectedDate) el.classList.add('active');
@@ -276,12 +267,40 @@
         renderGames(currentSelectedMonth, currentSelectedDate);
     }
 
-    // 3. 渲染主畫面賽程卡片
+    // 🌟 全新獨立函數：專門負責計算並產生帶有勝敗樣式的比分 HTML
+    function getScoreDisplayHtml(team1Score, team2Score, isModal = false) {
+        if (team1Score === '' || team2Score === '') {
+            return `<div class="vs-text" style="${isModal ? 'font-size: 2em;' : ''}">VS</div>`;
+        }
+
+        const s1 = parseInt(team1Score, 10);
+        const s2 = parseInt(team2Score, 10);
+        
+        let t1Class = 'winner';
+        let t2Class = 'winner';
+        
+        // 判斷勝負分配 CSS Class
+        if (s1 > s2) {
+            t2Class = 'loser';
+        } else if (s2 > s1) {
+            t1Class = 'loser';
+        }
+
+        const fontSize = isModal ? 'font-size: 3.5em;' : '';
+        
+        return `
+            <div class="score-text" style="${fontSize}">
+                <span class="${t1Class}">${team1Score}</span>
+                <span class="divider">-</span>
+                <span class="${t2Class}">${team2Score}</span>
+            </div>
+        `;
+    }
+
     function renderGames(monthKey, dateKey) {
         const container = document.getElementById('schedule-container');
         container.innerHTML = ''; 
 
-        // 進行資料過濾 (先濾月份，再濾日期)
         let filteredGames = allGames;
         
         if (monthKey !== 'all') {
@@ -303,13 +322,11 @@
         }
 
         filteredGames.forEach(game => {
-            const scoreDisplay = (game.team1Score && game.team2Score) 
-                ? `<div class="score-text">${game.team1Score} - ${game.team2Score}</div>` 
-                : `<div class="vs-text">VS</div>`;
+            // 呼叫新函數來生成比分
+            const scoreDisplay = getScoreDisplayHtml(game.team1Score, game.team2Score);
 
             const card = document.createElement('div');
             card.className = 'match-card';
-            // 點擊整張卡片開啟 Modal，傳入遊戲 ID
             card.onclick = () => openGameDetails(game.id); 
             card.innerHTML = `
                 <div class="match-info">
@@ -323,7 +340,7 @@
                     
                     <div class="score-box">
                         ${scoreDisplay}
-                        <div style="font-size: 0.7em; color: #3b82f6; margin-top: 8px;">點擊查看詳情</div>
+                        <div style="font-size: 0.75em; color: #3b82f6; margin-top: 10px; font-weight: 600;">點擊查看詳情</div>
                     </div>
                     
                     <div class="team">
@@ -336,7 +353,6 @@
         });
     }
 
-    // 4. 開啟與建立 Modal 的內容
     function openGameDetails(gameId) {
         const game = allGames.find(g => g.id === gameId);
         if (!game) return;
@@ -344,11 +360,9 @@
         const modal = document.getElementById('game-modal');
         const modalBody = document.getElementById('modal-body');
         
-        const scoreDisplay = (game.team1Score && game.team2Score) 
-            ? `<div class="score-text" style="font-size: 3em;">${game.team1Score} - ${game.team2Score}</div>` 
-            : `<div class="vs-text" style="font-size: 2em;">VS</div>`;
+        // 呼叫新函數生成 Modal 內的大字體比分
+        const scoreDisplay = getScoreDisplayHtml(game.team1Score, game.team2Score, true);
 
-        // 判斷是否包含媒體連結
         const hasMedia = game.photoLink || game.q1Link || game.q2Link || game.q3Link || game.q4Link;
         let mediaHtml = '';
 
@@ -385,16 +399,14 @@
             ${mediaHtml}
         `;
 
-        // 顯示 Modal
         modal.classList.add('show');
-        document.body.style.overflow = 'hidden'; // 鎖定背景滾動
+        document.body.style.overflow = 'hidden'; 
     }
 
-    // 關閉 Modal
     function closeModal(isClickOrEvent) {
         if (isClickOrEvent) {
             document.getElementById('game-modal').classList.remove('show');
-            document.body.style.overflow = 'auto'; // 恢復背景滾動
+            document.body.style.overflow = 'auto'; 
         }
     }
 </script>
