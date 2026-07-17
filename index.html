@@ -3,117 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>籃球聯賽賽程表</title>
+    <title>籃球聯賽賽程表 - Pro League</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f3f4f6; padding: 20px; margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; color: #111827; }
-        .match-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .match-info { text-align: center; color: #6b7280; font-size: 0.9em; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        /* NBA 風格深色主題 */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #0f172a; /* 深藍/黑色背景 */
+            color: #f8fafc;
+            padding: 20px 15px; 
+            margin: 0; 
+        }
+        .container { max-width: 650px; margin: 0 auto; }
+        
+        /* 標題與篩選器區域 */
+        .header-section { text-align: center; margin-bottom: 25px; }
+        h1 { font-size: 1.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .filter-container { background: #1e293b; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        select { 
+            width: 100%; padding: 10px; border-radius: 6px; background-color: #0f172a; 
+            color: #fff; border: 1px solid #475569; font-size: 1em; font-weight: 600; outline: none;
+        }
+
+        /* 賽程卡片設計 */
+        .match-card { 
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            padding: 20px; margin-bottom: 20px; border-radius: 12px; 
+            border: 1px solid #334155;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4); 
+        }
+        .match-info { 
+            text-align: center; color: #94a3b8; font-size: 0.85em; font-weight: 600; text-transform: uppercase;
+            margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; 
+        }
+        
+        /* 計分板排版 */
         .scoreboard { display: flex; justify-content: space-between; align-items: center; }
         .team { display: flex; flex-direction: column; align-items: center; width: 30%; }
-        .team-logo { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }
-        .team-name { font-weight: 600; color: #374151; font-size: 1.1em; text-align: center; }
-        .score-box { width: 40%; text-align: center; }
-        .score-text { font-size: 2.2em; font-weight: 800; color: #1f2937; letter-spacing: 2px; }
-        .vs-text { font-size: 1.2em; font-weight: 600; color: #9ca3af; }
+        .team-logo { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); }
+        .team-name { font-weight: 700; color: #f8fafc; font-size: 1em; text-align: center; }
         
-        /* 新增媒體按鈕區塊的樣式 */
-        .media-links { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .media-btn { background-color: #f3f4f6; color: #374151; text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; transition: background-color 0.2s; }
-        .media-btn:hover { background-color: #e5e7eb; }
-        .media-btn.photo { background-color: #e0f2fe; color: #0369a1; }
-        .media-btn.photo:hover { background-color: #bae6fd; }
-        .media-btn.video { background-color: #fee2e2; color: #b91c1c; }
-        .media-btn.video:hover { background-color: #fecaca; }
+        .score-box { width: 40%; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .score-text { font-size: 2.8em; font-weight: 900; color: #fff; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-family: Impact, "Arial Black", sans-serif; }
+        .vs-text { font-size: 1.2em; font-weight: 700; color: #64748b; }
+        
+        /* 展開詳情按鈕 */
+        .toggle-details-btn {
+            width: 100%; margin-top: 15px; padding: 10px; background-color: #2563eb; color: white;
+            border: none; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase;
+            transition: background-color 0.2s;
+        }
+        .toggle-details-btn:hover { background-color: #1d4ed8; }
+
+        /* 隱藏的媒體連結區塊 */
+        .media-links { 
+            display: none; /* 預設隱藏 */
+            margin-top: 15px; padding-top: 15px; border-top: 1px dashed #475569; 
+            justify-content: center; gap: 10px; flex-wrap: wrap; 
+        }
+        .media-links.show { display: flex; animation: fadeIn 0.3s ease-in-out; }
+        
+        .media-btn { 
+            background-color: #334155; color: #f8fafc; text-decoration: none; padding: 8px 16px; 
+            border-radius: 20px; font-size: 0.85em; font-weight: 700; transition: all 0.2s; border: 1px solid #475569;
+        }
+        .media-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .media-btn.photo { background-color: #0369a1; border-color: #0284c7; }
+        .media-btn.video { background-color: #be123c; border-color: #e11d48; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🏀 賽季賽程與賽事紀錄</h1>
+    <div class="header-section">
+        <h1>🏀 聯賽賽程與賽事回放</h1>
+        <div class="filter-container">
+            <select id="date-filter" onchange="filterGames(this.value)">
+                <option value="all">📅 顯示所有比賽日期 (All Dates)</option>
+                <!-- 日期選項會由 JS 自動生成 -->
+            </select>
+        </div>
+    </div>
+    
     <div id="schedule-container">資料載入中...</div>
 </div>
 
 <script>
-    // 將你的 CSV 網址貼在下方引號內
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsj3AtyZ5MaLlFq5upWgAbii-HhuUwR5UF6UR9DyhwP21zL7B40k9XHJRxvXP4isymusKVSvY5AuL/pub?output=csv';
+    
+    // 全域變數用來儲存所有比賽資料
+    let allGames = [];
 
     fetch(csvUrl)
         .then(response => response.text())
         .then(csvText => {
             const rows = csvText.split('\n').slice(1);
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = ''; 
-
+            
+            // 解析資料並存入陣列
             rows.forEach(row => {
                 const cols = row.split(',').map(item => item.trim());
                 if (cols.length < 7 || !cols[0]) return; 
 
-                // 對應你新的 A~N 欄位設計 (陣列索引從 0 開始)
-                const date = cols[0];         // A欄
-                const time = cols[1];         // B欄
-                const location = cols[2];     // C欄
-                const team1Name = cols[3];    // D欄
-                const team1Logo = cols[4] || 'https://via.placeholder.com/60?text=T1'; // E欄
-                const team1Score = cols[5] ? cols[5].replace('\r', '') : '';             // F欄
-                const team2Name = cols[6];    // G欄
-                const team2Logo = cols[7] || 'https://via.placeholder.com/60?text=T2'; // H欄
-                const team2Score = cols[8] ? cols[8].replace('\r', '') : '';             // I欄
-                
-                // 讀取新增的媒體連結欄位 (J~N)
-                const photoLink = cols[9] ? cols[9].replace('\r', '') : '';  // J欄
-                const q1Link = cols[10] ? cols[10].replace('\r', '') : '';   // K欄
-                const q2Link = cols[11] ? cols[11].replace('\r', '') : '';   // L欄
-                const q3Link = cols[12] ? cols[12].replace('\r', '') : '';   // M欄
-                const q4Link = cols[13] ? cols[13].replace('\r', '') : '';   // N欄
-                
-                // 判斷分數顯示
-                const scoreDisplay = (team1Score !== '' && team2Score !== '') 
-                    ? `<div class="score-text">${team1Score} - ${team2Score}</div>` 
-                    : `<div class="vs-text">VS</div>`;
-
-                // 產生媒體按鈕的 HTML (有網址才產生)
-                let mediaHtml = '';
-                if (photoLink || q1Link || q2Link || q3Link || q4Link) {
-                    mediaHtml += `<div class="media-links">`;
-                    if (photoLink) mediaHtml += `<a href="${photoLink}" target="_blank" class="media-btn photo">📷 照片</a>`;
-                    if (q1Link) mediaHtml += `<a href="${q1Link}" target="_blank" class="media-btn video">🎥 Q1</a>`;
-                    if (q2Link) mediaHtml += `<a href="${q2Link}" target="_blank" class="media-btn video">🎥 Q2</a>`;
-                    if (q3Link) mediaHtml += `<a href="${q3Link}" target="_blank" class="media-btn video">🎥 Q3</a>`;
-                    if (q4Link) mediaHtml += `<a href="${q4Link}" target="_blank" class="media-btn video">🎥 Q4</a>`;
-                    mediaHtml += `</div>`;
-                }
-
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                card.innerHTML = `
-                    <div class="match-info">
-                        📅 ${date} &nbsp; ⏰ ${time} &nbsp; 📍 ${location}
-                    </div>
-                    <div class="scoreboard">
-                        <div class="team">
-                            <img src="${team1Logo}" alt="${team1Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/60?text=Logo'">
-                            <div class="team-name">${team1Name}</div>
-                        </div>
-                        
-                        <div class="score-box">
-                            ${scoreDisplay}
-                        </div>
-                        
-                        <div class="team">
-                            <img src="${team2Logo}" alt="${team2Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/60?text=Logo'">
-                            <div class="team-name">${team2Name}</div>
-                        </div>
-                    </div>
-                    ${mediaHtml}
-                `;
-                container.appendChild(card);
+                const gameData = {
+                    date: cols[0],
+                    time: cols[1],
+                    location: cols[2],
+                    team1Name: cols[3],
+                    team1Logo: cols[4] || 'https://via.placeholder.com/70/334155/FFFFFF?text=T1',
+                    team1Score: cols[5] ? cols[5].replace('\r', '') : '',
+                    team2Name: cols[6],
+                    team2Logo: cols[7] || 'https://via.placeholder.com/70/334155/FFFFFF?text=T2',
+                    team2Score: cols[8] ? cols[8].replace('\r', '') : '',
+                    photoLink: cols[9] ? cols[9].replace('\r', '') : '',
+                    q1Link: cols[10] ? cols[10].replace('\r', '') : '',
+                    q2Link: cols[11] ? cols[11].replace('\r', '') : '',
+                    q3Link: cols[12] ? cols[12].replace('\r', '') : '',
+                    q4Link: cols[13] ? cols[13].replace('\r', '') : ''
+                };
+                allGames.push(gameData);
             });
+
+            // 提取不重複的日期來建立下拉選單
+            populateDateFilter();
+            
+            // 初始載入：顯示所有比賽
+            renderGames('all');
         })
         .catch(error => {
-            document.getElementById('schedule-container').innerHTML = '載入失敗，請確認 CSV 發布網址是否正確。';
+            document.getElementById('schedule-container').innerHTML = '<div style="text-align:center; color:#ef4444;">載入失敗，請確認資料來源。</div>';
         });
+
+    // 建立下拉選單的函數
+    function populateDateFilter() {
+        const filterSelect = document.getElementById('date-filter');
+        const uniqueDates = [...new Set(allGames.map(game => game.date))];
+        
+        uniqueDates.forEach(date => {
+            const option = document.createElement('option');
+            option.value = date;
+            option.textContent = `📅 ${date}`;
+            filterSelect.appendChild(option);
+        });
+    }
+
+    // 負責渲染賽程卡片的函數
+    function renderGames(selectedDate) {
+        const container = document.getElementById('schedule-container');
+        container.innerHTML = ''; // 清空現有卡片
+
+        // 根據選擇的日期過濾資料
+        const filteredGames = selectedDate === 'all' 
+            ? allGames 
+            : allGames.filter(game => game.date === selectedDate);
+
+        if (filteredGames.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">該日期目前沒有賽事。</div>';
+            return;
+        }
+
+        // 產生卡片 HTML
+        filteredGames.forEach((game, index) => {
+            const scoreDisplay = (game.team1Score !== '' && game.team2Score !== '') 
+                ? `<div class="score-text">${game.team1Score} - ${game.team2Score}</div>` 
+                : `<div class="vs-text">VS</div>`;
+
+            // 檢查是否有媒體連結
+            const hasMedia = game.photoLink || game.q1Link || game.q2Link || game.q3Link || game.q4Link;
+            
+            let mediaHtml = '';
+            let toggleBtnHtml = '';
+
+            if (hasMedia) {
+                // 有連結時，加入展開按鈕與隱藏的內容區塊
+                toggleBtnHtml = `<button class="toggle-details-btn" onclick="toggleDetails('media-section-${index}')">Game Details (比賽詳情) 🔽</button>`;
+                
+                mediaHtml += `<div id="media-section-${index}" class="media-links">`;
+                if (game.photoLink) mediaHtml += `<a href="${game.photoLink}" target="_blank" class="media-btn photo">📷 Photos</a>`;
+                if (game.q1Link) mediaHtml += `<a href="${game.q1Link}" target="_blank" class="media-btn video">🎥 Q1</a>`;
+                if (game.q2Link) mediaHtml += `<a href="${game.q2Link}" target="_blank" class="media-btn video">🎥 Q2</a>`;
+                if (game.q3Link) mediaHtml += `<a href="${game.q3Link}" target="_blank" class="media-btn video">🎥 Q3</a>`;
+                if (game.q4Link) mediaHtml += `<a href="${game.q4Link}" target="_blank" class="media-btn video">🎥 Q4</a>`;
+                mediaHtml += `</div>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <div class="match-info">
+                    📅 ${game.date} &nbsp;|&nbsp; ⏰ ${game.time} &nbsp;|&nbsp; 📍 ${game.location}
+                </div>
+                <div class="scoreboard">
+                    <div class="team">
+                        <img src="${game.team1Logo}" alt="${game.team1Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=T1'">
+                        <div class="team-name">${game.team1Name}</div>
+                    </div>
+                    
+                    <div class="score-box">
+                        ${scoreDisplay}
+                    </div>
+                    
+                    <div class="team">
+                        <img src="${game.team2Logo}" alt="${game.team2Name}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=T2'">
+                        <div class="team-name">${game.team2Name}</div>
+                    </div>
+                </div>
+                ${toggleBtnHtml}
+                ${mediaHtml}
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 觸發顯示/隱藏媒體區塊的函數
+    function toggleDetails(sectionId) {
+        const section = document.getElementById(sectionId);
+        section.classList.toggle('show');
+    }
 </script>
 
 </body>
