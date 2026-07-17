@@ -8,21 +8,85 @@
         /* NBA 風格深色主題 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #0f172a; /* 深藍/黑色背景 */
+            background-color: #0f172a; 
             color: #f8fafc;
             padding: 20px 15px; 
             margin: 0; 
         }
         .container { max-width: 650px; margin: 0 auto; }
         
-        /* 標題與篩選器區域 */
-        .header-section { text-align: center; margin-bottom: 25px; }
-        h1 { font-size: 1.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .filter-container { background: #1e293b; padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #334155; }
-        select { 
-            width: 100%; padding: 10px; border-radius: 6px; background-color: #0f172a; 
-            color: #fff; border: 1px solid #475569; font-size: 1em; font-weight: 600; outline: none;
+        /* 標題 */
+        h1 { text-align: center; font-size: 1.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        /* 🌟 新版橫向日期篩選器 (參照截圖設計) */
+        .date-picker-wrapper {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
         }
+        .month-indicator {
+            font-size: 1em;
+            font-weight: 800;
+            color: #f8fafc;
+            min-width: 110px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dates-carousel {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+            margin-left: 10px;
+            border-left: 1px solid #334155;
+            padding-left: 10px;
+        }
+        .nav-arrow {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: color 0.2s;
+        }
+        .nav-arrow:hover { color: #f8fafc; }
+        .dates-list {
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox 隱藏捲軸 */
+            scroll-behavior: smooth;
+            gap: 5px;
+            flex-grow: 1;
+        }
+        .dates-list::-webkit-scrollbar { display: none; } /* Chrome/Safari 隱藏捲軸 */
+        
+        .date-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            color: #94a3b8;
+            border-bottom: 3px solid transparent;
+            min-width: 40px;
+            transition: all 0.2s;
+        }
+        .date-item:hover { color: #e2e8f0; }
+        /* 點選後的高亮狀態 */
+        .date-item.active {
+            color: #f8fafc;
+            border-bottom: 3px solid #f8fafc;
+        }
+        .date-item .day-name { font-size: 0.85em; font-weight: 600; margin-bottom: 4px; }
+        .date-item .day-number { font-size: 1.4em; font-weight: 800; }
 
         /* 賽程卡片設計 */
         .match-card { 
@@ -56,7 +120,7 @@
 
         /* 隱藏的媒體連結區塊 */
         .media-links { 
-            display: none; /* 預設隱藏 */
+            display: none; 
             margin-top: 15px; padding-top: 15px; border-top: 1px dashed #475569; 
             justify-content: center; gap: 10px; flex-wrap: wrap; 
         }
@@ -79,13 +143,20 @@
 <body>
 
 <div class="container">
-    <div class="header-section">
-        <h1>🏀 聯賽賽程與賽事回放</h1>
-        <div class="filter-container">
-            <select id="date-filter" onchange="filterGames(this.value)">
-                <option value="all">📅 顯示所有比賽日期 (All Dates)</option>
-                <!-- 日期選項會由 JS 自動生成 -->
-            </select>
+    <h1>🏀 聯賽賽程與賽事回放</h1>
+    
+    <!-- 新版橫向日期篩選器 -->
+    <div class="date-picker-wrapper">
+        <div class="month-indicator">
+            <span id="display-month-year">Season</span>
+            <span>📅 ▾</span>
+        </div>
+        <div class="dates-carousel">
+            <button class="nav-arrow" onclick="scrollDates(-1)">&#10094;</button>
+            <div class="dates-list" id="dates-list-container">
+                <!-- 日期項目會由 JS 自動生成 -->
+            </div>
+            <button class="nav-arrow" onclick="scrollDates(1)">&#10095;</button>
         </div>
     </div>
     
@@ -95,67 +166,114 @@
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsj3AtyZ5MaLlFq5upWgAbii-HhuUwR5UF6UR9DyhwP21zL7B40k9XHJRxvXP4isymusKVSvY5AuL/pub?output=csv';
     
-    // 全域變數用來儲存所有比賽資料
     let allGames = [];
+    let currentSelectedDate = 'all';
 
     fetch(csvUrl)
         .then(response => response.text())
         .then(csvText => {
             const rows = csvText.split('\n').slice(1);
             
-            // 解析資料並存入陣列
             rows.forEach(row => {
-                const cols = row.split(',').map(item => item.trim());
+                // 【Bug 修復關鍵】徹底清除每一個欄位可能存在的換行符號 \r 和頭尾空白
+                const cols = row.split(',').map(item => item.replace(/\r/g, '').trim());
                 if (cols.length < 7 || !cols[0]) return; 
 
                 const gameData = {
-                    date: cols[0],
+                    date: cols[0], 
                     time: cols[1],
                     location: cols[2],
                     team1Name: cols[3],
                     team1Logo: cols[4] || 'https://via.placeholder.com/70/334155/FFFFFF?text=T1',
-                    team1Score: cols[5] ? cols[5].replace('\r', '') : '',
+                    team1Score: cols[5],
                     team2Name: cols[6],
                     team2Logo: cols[7] || 'https://via.placeholder.com/70/334155/FFFFFF?text=T2',
-                    team2Score: cols[8] ? cols[8].replace('\r', '') : '',
-                    photoLink: cols[9] ? cols[9].replace('\r', '') : '',
-                    q1Link: cols[10] ? cols[10].replace('\r', '') : '',
-                    q2Link: cols[11] ? cols[11].replace('\r', '') : '',
-                    q3Link: cols[12] ? cols[12].replace('\r', '') : '',
-                    q4Link: cols[13] ? cols[13].replace('\r', '') : ''
+                    team2Score: cols[8],
+                    photoLink: cols[9],
+                    q1Link: cols[10],
+                    q2Link: cols[11],
+                    q3Link: cols[12],
+                    q4Link: cols[13]
                 };
                 allGames.push(gameData);
             });
 
-            // 提取不重複的日期來建立下拉選單
-            populateDateFilter();
-            
-            // 初始載入：顯示所有比賽
-            renderGames('all');
+            buildDateCarousel();
+            renderGames('all'); // 預設顯示所有比賽
         })
         .catch(error => {
             document.getElementById('schedule-container').innerHTML = '<div style="text-align:center; color:#ef4444;">載入失敗，請確認資料來源。</div>';
         });
 
-    // 建立下拉選單的函數
-    function populateDateFilter() {
-        const filterSelect = document.getElementById('date-filter');
-        const uniqueDates = [...new Set(allGames.map(game => game.date))];
+    // 解析日期並建立橫向選擇器
+    function buildDateCarousel() {
+        const container = document.getElementById('dates-list-container');
+        // 取出不重複的日期並排序
+        const uniqueDates = [...new Set(allGames.map(game => game.date))].sort();
         
-        uniqueDates.forEach(date => {
-            const option = document.createElement('option');
-            option.value = date;
-            option.textContent = `📅 ${date}`;
-            filterSelect.appendChild(option);
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let lastMonthYear = 'Season';
+
+        uniqueDates.forEach(dateStr => {
+            const d = new Date(dateStr);
+            let dayName = 'Day';
+            let dayNum = '--';
+            
+            // 若日期格式正確，擷取星期與日期
+            if (!isNaN(d)) {
+                dayName = daysOfWeek[d.getDay()];
+                dayNum = d.getDate();
+                lastMonthYear = `${months[d.getMonth()]} ${d.getFullYear()}`; // 例如 July 2026
+            }
+
+            const div = document.createElement('div');
+            div.className = 'date-item';
+            div.dataset.date = dateStr; // 將完整日期綁定在標籤上
+            div.onclick = () => filterGames(dateStr);
+            div.innerHTML = `
+                <div class="day-name">${dayName}</div>
+                <div class="day-number">${dayNum}</div>
+            `;
+            container.appendChild(div);
         });
+
+        // 更新左側的月份顯示
+        document.getElementById('display-month-year').textContent = lastMonthYear;
     }
 
-    // 負責渲染賽程卡片的函數
+    // 箭頭左右滑動功能
+    function scrollDates(direction) {
+        const list = document.getElementById('dates-list-container');
+        const scrollAmount = 100; // 每次點擊滑動的像素
+        list.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+
+    // 處理篩選邏輯與 UI 更新
+    function filterGames(clickedDate) {
+        // 如果點擊的是「已經被選中」的日期，就取消選擇（顯示所有）
+        if (currentSelectedDate === clickedDate) {
+            currentSelectedDate = 'all';
+        } else {
+            currentSelectedDate = clickedDate;
+        }
+
+        // 更新日期按鈕的 CSS 高亮狀態
+        document.querySelectorAll('.date-item').forEach(el => {
+            el.classList.remove('active');
+            if (el.dataset.date === currentSelectedDate) {
+                el.classList.add('active');
+            }
+        });
+
+        // 重新渲染畫面
+        renderGames(currentSelectedDate);
+    }
+
     function renderGames(selectedDate) {
         const container = document.getElementById('schedule-container');
-        container.innerHTML = ''; // 清空現有卡片
+        container.innerHTML = ''; 
 
-        // 根據選擇的日期過濾資料
         const filteredGames = selectedDate === 'all' 
             ? allGames 
             : allGames.filter(game => game.date === selectedDate);
@@ -165,20 +283,16 @@
             return;
         }
 
-        // 產生卡片 HTML
         filteredGames.forEach((game, index) => {
-            const scoreDisplay = (game.team1Score !== '' && game.team2Score !== '') 
+            const scoreDisplay = (game.team1Score && game.team2Score) 
                 ? `<div class="score-text">${game.team1Score} - ${game.team2Score}</div>` 
                 : `<div class="vs-text">VS</div>`;
 
-            // 檢查是否有媒體連結
             const hasMedia = game.photoLink || game.q1Link || game.q2Link || game.q3Link || game.q4Link;
-            
             let mediaHtml = '';
             let toggleBtnHtml = '';
 
             if (hasMedia) {
-                // 有連結時，加入展開按鈕與隱藏的內容區塊
                 toggleBtnHtml = `<button class="toggle-details-btn" onclick="toggleDetails('media-section-${index}')">Game Details (比賽詳情) 🔽</button>`;
                 
                 mediaHtml += `<div id="media-section-${index}" class="media-links">`;
@@ -218,10 +332,8 @@
         });
     }
 
-    // 觸發顯示/隱藏媒體區塊的函數
     function toggleDetails(sectionId) {
-        const section = document.getElementById(sectionId);
-        section.classList.toggle('show');
+        document.getElementById(sectionId).classList.toggle('show');
     }
 </script>
 
