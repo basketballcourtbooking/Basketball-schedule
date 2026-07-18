@@ -68,7 +68,7 @@
     const db = firebase.firestore();
     let allGames = [];
 
-    // 首頁輕量載入
+    // 首頁輕量載入 (加入錯誤處理，如果被阻擋會顯示錯誤訊息)
     db.collection("game").onSnapshot((snapshot) => {
         allGames = []; 
         snapshot.forEach((doc) => {
@@ -77,7 +77,15 @@
         });
         
         allGames.sort((a, b) => new Date(a.date) - new Date(b.date));
-        renderGames();
+        
+        if(allGames.length === 0) {
+            document.getElementById('schedule-container').innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">目前尚無賽程資料，或請點擊 Google 表格的同步按鈕。</div>';
+        } else {
+            renderGames();
+        }
+    }, (error) => {
+        console.error("Firebase 讀取錯誤:", error);
+        document.getElementById('schedule-container').innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">資料庫連線失敗，請檢查 Firebase Rules 設定是否為 allow read, write: if true;</div>';
     });
 
     function getScoreHtml(s1, s2) {
@@ -99,7 +107,7 @@
                 <div class="match-info">📅 ${game.date} | ⏰ ${game.time} | 📍 ${game.location}</div>
                 <div class="scoreboard">
                     <div class="team">
-                        <img src="${game.HomeTeamLogo}" class="team-logo">
+                        <img src="${game.HomeTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Home'">
                         <div class="team-name">${game.HomeTeamName}</div>
                     </div>
                     <div class="score-box">
@@ -107,7 +115,7 @@
                         <div style="font-size:0.75em; color:#3b82f6; margin-top:5px;">📊 點擊查看進階數據</div>
                     </div>
                     <div class="team">
-                        <img src="${game.AwayTeamLogo}" class="team-logo">
+                        <img src="${game.AwayTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Away'">
                         <div class="team-name">${game.AwayTeamName}</div>
                     </div>
                 </div>
@@ -125,9 +133,9 @@
         
         modalBody.innerHTML = `
             <div class="scoreboard" style="margin-bottom:10px;">
-                <div class="team"><img src="${basicData.HomeTeamLogo}" class="team-logo"><div class="team-name">${basicData.HomeTeamName}</div></div>
+                <div class="team"><img src="${basicData.HomeTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Home'"><div class="team-name">${basicData.HomeTeamName}</div></div>
                 <div class="score-box">${getScoreHtml(basicData.HomeTeamScore, basicData.AwayTeamScore)}</div>
-                <div class="team"><img src="${basicData.AwayTeamLogo}" class="team-logo"><div class="team-name">${basicData.AwayTeamName}</div></div>
+                <div class="team"><img src="${basicData.AwayTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Away'"><div class="team-name">${basicData.AwayTeamName}</div></div>
             </div>
             <div id="advanced-stats" class="loading-text">🔄 正在抓取超完整進階數據...</div>
         `;
@@ -178,12 +186,13 @@
                                 </tr>`;
                 
                 players.forEach(p => {
+                    // 修正：使用 p['屬性名稱'] 來讀取數字開頭的資料
                     html += `<tr>
                         <td>${p.Team||'-'}</td><td>${p.Number||'-'}</td><td style="font-weight:bold;">${p.Name||'-'}</td>
                         <td>${p.MIN||'-'}</td><td style="font-weight:bold; color:#3b82f6;">${p.PTS||'-'}</td>
                         <td>${p.FGM||'-'}</td><td>${p.FGA||'-'}</td><td>${p.FG_pct||'-'}</td>
-                        <td>${p.3PM||'-'}</td><td>${p.3PA||'-'}</td><td>${p.3P_pct||'-'}</td>
-                        <td>${p.2PM||'-'}</td><td>${p.2PA||'-'}</td><td>${p.2P_pct||'-'}</td>
+                        <td>${p['3PM']||'-'}</td><td>${p['3PA']||'-'}</td><td>${p['3P_pct']||'-'}</td>
+                        <td>${p['2PM']||'-'}</td><td>${p['2PA']||'-'}</td><td>${p['2P_pct']||'-'}</td>
                         <td>${p.FTM||'-'}</td><td>${p.FTA||'-'}</td><td>${p.FT_pct||'-'}</td>
                         <td>${p.OREB||'-'}</td><td>${p.DREB||'-'}</td><td>${p.REB||'-'}</td>
                         <td>${p.AST||'-'}</td><td>${p.TOV||'-'}</td><td>${p.STL||'-'}</td>
