@@ -77,13 +77,11 @@
         .media-btn.video { background-color: #be123c; border-color: #e11d48; }
 
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 25px; }
-        .q-table, .player-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; white-space: nowrap; }
-        .q-table th, .player-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
-        .q-table td, .player-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
-        .player-table tr:hover { background-color: #334155; }
+        .q-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; white-space: nowrap; }
+        .q-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
+        .q-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
         
         .section-title { margin-top: 25px; font-size: 1.1em; font-weight: bold; border-left: 4px solid #3b82f6; padding-left: 10px; }
-        .team-table-title { font-size: 1em; font-weight: bold; color: #e2e8f0; margin-top: 15px; margin-bottom: 5px; padding-left: 5px; }
         .loading-text { text-align: center; color: #3b82f6; font-weight: bold; padding: 20px; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -111,7 +109,7 @@
             /* 彈出視窗版面微調 */
             .modal-content { padding: 15px; }
             .modal-header-card { padding: 15px 10px; }
-            .q-table th, .q-table td, .player-table th, .player-table td { padding: 8px 6px; font-size: 0.85em; }
+            .q-table th, .q-table td { padding: 8px 6px; font-size: 0.85em; }
         }
     </style>
 </head>
@@ -335,14 +333,14 @@
                 <div class="match-info">${game.date} • ${game.time} • ${game.location}</div>
                 <div class="scoreboard">
                     <div class="team">
-                        <img src="${game.HomeTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Home'">
+                        ${game.HomeTeamLogo ? `<img src="${game.HomeTeamLogo}" class="team-logo" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
                         <div class="team-name">${game.HomeTeamName}</div>
                     </div>
                     <div class="score-box">
                         ${getScoreHtml(game.HomeTeamScore, game.AwayTeamScore)}
                     </div>
                     <div class="team">
-                        <img src="${game.AwayTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Away'">
+                        ${game.AwayTeamLogo ? `<img src="${game.AwayTeamLogo}" class="team-logo" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
                         <div class="team-name">${game.AwayTeamName}</div>
                     </div>
                 </div>
@@ -365,12 +363,12 @@
                 <div class="match-info" style="margin-bottom:10px;">${basicData.date} • ${basicData.time} • ${basicData.location}</div>
                 <div class="scoreboard" style="margin-bottom:0;">
                     <div class="team">
-                        <img src="${basicData.HomeTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Home'">
+                        ${basicData.HomeTeamLogo ? `<img src="${basicData.HomeTeamLogo}" class="team-logo" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
                         <div class="team-name">${basicData.HomeTeamName}</div>
                     </div>
                     <div class="score-box">${getScoreHtml(basicData.HomeTeamScore, basicData.AwayTeamScore)}</div>
                     <div class="team">
-                        <img src="${basicData.AwayTeamLogo}" class="team-logo" onerror="this.src='https://via.placeholder.com/70/334155/FFFFFF?text=Away'">
+                        ${basicData.AwayTeamLogo ? `<img src="${basicData.AwayTeamLogo}" class="team-logo" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
                         <div class="team-name">${basicData.AwayTeamName}</div>
                     </div>
                 </div>
