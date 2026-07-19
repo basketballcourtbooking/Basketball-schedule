@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>籃球聯賽賽程表 - Pro League</title>
     
+    <!-- 引入全新的 Reddit Sans Condensed 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Reddit+Sans+Condensed:wght@200..900&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px 15px; margin: 0; }
+        /* 套用全域新字體 */
+        body { font-family: 'Reddit Sans Condensed', "Arial Narrow", sans-serif; background-color: #0f172a; color: #f8fafc; padding: 20px 15px; margin: 0; }
         .container { max-width: 650px; margin: 0 auto; }
         h1 { text-align: center; font-size: 1.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
@@ -27,42 +31,49 @@
         .date-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 8px 12px; color: #94a3b8; border-bottom: 3px solid transparent; min-width: 45px; transition: all 0.2s; border-radius: 8px; }
         .date-item:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
         .date-item.active { color: #f8fafc; background: #334155; }
-        .date-item .day-name { font-size: 0.75em; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-        .date-item .day-number { font-size: 1.2em; font-weight: 800; }
+        .date-item .day-name { font-size: 0.85em; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .date-item .day-number { font-size: 1.3em; font-weight: 800; }
 
-        /* 賽程卡片 - 完美復刻 NBA 排版 */
-        .match-card { background: #ffffff; color: #0f172a; padding: 18px 20px 12px 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .match-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.25); }
+        /* 賽程卡片 - 深色懸浮質感 */
+        .match-card { background: #1e293b; padding: 18px 20px 12px 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 20px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .match-card:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(0,0,0,0.6); border-color: #475569; }
         
-        .match-info { text-align: center; color: #000000; font-size: 0.8em; font-weight: 700; margin-bottom: 20px; letter-spacing: 0.5px; }
+        .match-info { text-align: center; color: #94a3b8; font-size: 0.9em; font-weight: 700; margin-bottom: 20px; letter-spacing: 0.5px; }
         
-        .scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .team { display: flex; flex-direction: column; align-items: center; width: 25%; }
-        .team-logo { width: 55px; height: 55px; object-fit: contain; margin-bottom: 8px; }
-        .team-name { font-weight: 500; font-size: 0.95em; text-align: center; color: #000000; }
+        .scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 0 15px; }
+        .team { display: flex; flex-direction: column; align-items: center; width: 32%; }
+        .team-logo { width: 55px; height: 55px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .team-name { font-weight: 700; font-size: 1.05em; text-align: center; color: #f8fafc; }
         
-        .score-box { width: 50%; display: flex; justify-content: center; align-items: center; }
-        .score-text { display: flex; justify-content: center; align-items: center; width: 100%; gap: 15px; }
-        .score-num { font-size: 3em; font-family: "Arial Black", Impact, sans-serif; font-weight: 900; letter-spacing: -1px; }
-        .score-num.winner { color: #000000; }
+        .score-box { width: 36%; display: flex; justify-content: center; align-items: center; }
+        
+        /* 絕對居中網格排版 (Grid) */
+        .score-grid { display: grid; grid-template-columns: 1fr 20px 55px 20px 1fr; align-items: center; justify-items: center; width: 100%; gap: 4px; }
+        /* 更新分數：縮小且取消粗體 */
+        .score-num { font-size: 3em; font-weight: 300; letter-spacing: -1px; line-height: 1; }
+        .score-num.home-score { justify-self: end; }
+        .score-num.away-score { justify-self: start; }
+        .score-num.winner { color: #f8fafc; }
         .score-num.loser { color: #64748b; }
         
-        .final-status { display: flex; align-items: center; font-size: 0.75em; font-weight: 800; color: #000000; letter-spacing: 0.5px; }
-        .final-status span { font-size: 1.2em; margin: 0 4px; }
-        .vs-text { font-size: 1.2em; font-weight: 800; color: #64748b; letter-spacing: 1px; }
+        .arrow { font-size: 1em; font-weight: 800; color: #f8fafc; }
+        .arrow.invisible { visibility: hidden; } /* 隱藏但保留佔位 */
+        .final-text { font-size: 0.9em; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; }
+        .vs-text { font-size: 1.2em; font-weight: 800; color: #64748b; letter-spacing: 1px; grid-column: 1 / -1; }
 
-        .card-footer { border-top: 1px solid #e2e8f0; margin-top: 15px; padding-top: 12px; text-align: center; }
-        .details-btn { display: inline-flex; align-items: center; font-size: 0.85em; font-weight: 700; color: #0f172a; }
+        .card-footer { border-top: 1px solid #334155; margin-top: 15px; padding-top: 12px; text-align: center; }
+        .details-btn { display: inline-flex; align-items: center; font-size: 0.9em; font-weight: 700; color: #94a3b8; transition: color 0.2s; }
+        .match-card:hover .details-btn { color: #f8fafc; }
         .details-btn::before { content: '▶'; color: #fbbf24; margin-right: 6px; font-size: 1.1em; }
         
-        /* 彈出視窗 (維持深色以區別數據區塊) */
+        /* 彈出視窗 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px); }
         .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out forwards; }
-        .modal-content { background: #1e293b; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 16px; border: 1px solid #334155; padding: 25px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-        .close-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer; transition: color 0.2s; }
+        .modal-content { background: #0f172a; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 16px; border: 1px solid #334155; padding: 25px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer; transition: color 0.2s; z-index: 10; }
         .close-btn:hover { color: #f8fafc; }
         
-        .modal-header-card { background: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .modal-header-card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
 
         /* 媒體按鈕 (照片/影片) */
         .media-links { margin-top: 10px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; }
@@ -73,13 +84,11 @@
 
         /* 數據表格 */
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 25px; }
-        .q-table, .player-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.85em; white-space: nowrap; }
-        .q-table th, .player-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
-        .q-table td, .player-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
-        .player-table tr:hover { background-color: #334155; }
+        .q-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; white-space: nowrap; }
+        .q-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
+        .q-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
         
         .section-title { margin-top: 25px; font-size: 1.1em; font-weight: bold; border-left: 4px solid #3b82f6; padding-left: 10px; }
-        .team-table-title { font-size: 1em; font-weight: bold; color: #e2e8f0; margin-top: 15px; margin-bottom: 5px; padding-left: 5px; }
         .loading-text { text-align: center; color: #3b82f6; font-weight: bold; padding: 20px; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -90,7 +99,6 @@
 <div class="container">
     <h1>🏀 聯賽賽程表</h1>
     
-    <!-- 橫向日期篩選器 -->
     <div class="date-picker-wrapper">
         <div class="month-indicator">
             <select id="month-select" onchange="handleMonthChange(this.value)"></select>
@@ -131,7 +139,6 @@
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    // 計算今日日期 (確保載入時自動選中)
     const getTodayDateObj = () => {
         const now = new Date();
         const y = now.getFullYear();
@@ -163,12 +170,10 @@
         
         allGames.sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        // 首次載入時自動將篩選器設定為「今天」
         if (isFirstLoad) {
             const todayObj = getTodayDateObj();
             currentSelectedMonth = todayObj.monthStr;
             currentSelectedDate = todayObj.dateStr;
-            // 就算這個月目前沒比賽，也強制建立選單選項，避免 UI 跑版
             if (!uniqueMonths[currentSelectedMonth]) {
                 uniqueMonths[currentSelectedMonth] = todayObj.label;
             }
@@ -179,7 +184,6 @@
         buildDateCarousel(currentSelectedMonth);
         renderGames(currentSelectedMonth, currentSelectedDate);
 
-        // 自動將水平軸捲動到選中的日期
         setTimeout(() => {
             const activeItem = document.querySelector('.date-item.active');
             if(activeItem) {
@@ -205,7 +209,6 @@
 
     function handleMonthChange(monthKey) {
         currentSelectedMonth = monthKey;
-        // 切換月份時，取消鎖定日期，顯示整個月賽程
         currentSelectedDate = 'all'; 
         buildDateCarousel(monthKey);
         renderGames(monthKey, 'all');
@@ -218,7 +221,6 @@
         let filteredDates = [...new Set(allGames.map(g => g.date))].sort();
         
         if (monthKey !== 'all') {
-            // 確保「今天」一定會出現在輪播軸中，即使今天沒有比賽
             const todayObj = getTodayDateObj();
             if (monthKey === todayObj.monthStr && !filteredDates.includes(todayObj.dateStr)) {
                 filteredDates.push(todayObj.dateStr);
@@ -255,7 +257,6 @@
     }
 
     function filterByDate(clickedDate) {
-        // 如果重複點擊已選中的日期，則改為顯示該月全部
         currentSelectedDate = (currentSelectedDate === clickedDate) ? 'all' : clickedDate;
         document.querySelectorAll('.date-item').forEach(el => {
             el.classList.remove('active');
@@ -264,9 +265,9 @@
         renderGames(currentSelectedMonth, currentSelectedDate);
     }
 
-    // NBA 風格的比分渲染 (依據 IMG_0678.jpg 比例打造)
+    // 絕對置中的 Grid 比分渲染函數
     function getScoreHtml(s1, s2) {
-        if (!s1 || !s2) return `<div class="score-text"><div class="vs-text">VS</div></div>`;
+        if (!s1 || !s2) return `<div class="score-grid"><div class="vs-text">VS</div></div>`;
         
         const n1 = parseInt(s1, 10);
         const n2 = parseInt(s2, 10);
@@ -274,15 +275,13 @@
         let t1Class = n1 > n2 ? 'winner' : 'loser';
         let t2Class = n2 > n1 ? 'winner' : 'loser';
         
-        let middleHtml = 'FINAL';
-        if (n1 > n2) middleHtml = '<span>◀</span> FINAL';
-        if (n2 > n1) middleHtml = 'FINAL <span>▶</span>';
-
         return `
-            <div class="score-text">
-                <span class="score-num ${t1Class}">${s1}</span>
-                <div class="final-status">${middleHtml}</div>
-                <span class="score-num ${t2Class}">${s2}</span>
+            <div class="score-grid">
+                <span class="score-num home-score ${t1Class}">${s1}</span>
+                <span class="arrow ${n1 > n2 ? '' : 'invisible'}">◀</span>
+                <span class="final-text">FINAL</span>
+                <span class="arrow ${n2 > n1 ? '' : 'invisible'}">▶</span>
+                <span class="score-num away-score ${t2Class}">${s2}</span>
             </div>
         `;
     }
@@ -328,14 +327,14 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <div class="details-btn">League Pass - 查看數據與影像</div>
+                    <div class="details-btn">查看數據與影像</div>
                 </div>
             `;
             container.appendChild(card);
         });
     }
 
-    // 延遲載入進階數據 (拆分兩隊表格 + 相片影片區塊)
+    // 延遲載入進階數據 (僅保留媒體與 Q1-Q4 計分板)
     function openGameDetails(gameId, basicData) {
         const modal = document.getElementById('game-modal');
         const modalBody = document.getElementById('modal-body');
@@ -370,7 +369,7 @@
             const adv = doc.data();
             let html = '';
 
-            // --- 區塊 1：媒體連結 (照片與影片) ---
+            // 媒體連結 (照片與影片)
             const hasMedia = adv.photoLink || adv.Q1Link || adv.Q2Link || adv.Q3Link || adv.Q4Link;
             if (hasMedia) {
                 html += `<div class="media-links"><div class="media-links-title">Game Highlights (賽事重播與花絮)</div>`;
@@ -382,7 +381,7 @@
                 html += `</div>`;
             }
 
-            // --- 區塊 2：各節比分表 ---
+            // 各節比分表
             if(adv.HomeQ1 || adv.AwayQ1) {
                 html += `
                 <div class="section-title">各節比分 (Box Score)</div>
@@ -401,60 +400,6 @@
                         </tr>
                     </table>
                 </div>`;
-            }
-
-            // --- 區塊 3：球員數據 (兩隊拆分，移除 GameID 與 Team 欄位) ---
-            if(adv.players && adv.players !== "[]") {
-                const players = JSON.parse(adv.players);
-                
-                const buildPlayerTable = (teamName, teamPlayers) => {
-                    if(teamPlayers.length === 0) return '';
-                    let tHtml = `
-                        <div class="team-table-title">🏀 ${teamName}</div>
-                        <div class="table-responsive">
-                            <table class="player-table">
-                                <tr>
-                                    <th>#</th><th>姓名</th><th>MIN</th><th>PTS</th>
-                                    <th>FGM</th><th>FGA</th><th>FG%</th><th>3PM</th><th>3PA</th><th>3P%</th>
-                                    <th>2PM</th><th>2PA</th><th>2P%</th><th>FTM</th><th>FTA</th><th>FT%</th>
-                                    <th>OREB</th><th>DREB</th><th>REB</th><th>AST</th><th>TOV</th><th>STL</th>
-                                    <th>BLK</th><th>EFF</th><th>+/-</th>
-                                </tr>`;
-                    
-                    teamPlayers.forEach(p => {
-                        tHtml += `<tr>
-                            <td>${p.Number||'-'}</td><td style="font-weight:bold;">${p.Name||'-'}</td>
-                            <td>${p.MIN||'-'}</td><td style="font-weight:bold; color:#3b82f6;">${p.PTS||'-'}</td>
-                            <td>${p.FGM||'-'}</td><td>${p.FGA||'-'}</td><td>${p.FG_pct||'-'}</td>
-                            <td>${p['3PM']||'-'}</td><td>${p['3PA']||'-'}</td><td>${p['3P_pct']||'-'}</td>
-                            <td>${p['2PM']||'-'}</td><td>${p['2PA']||'-'}</td><td>${p['2P_pct']||'-'}</td>
-                            <td>${p.FTM||'-'}</td><td>${p.FTA||'-'}</td><td>${p.FT_pct||'-'}</td>
-                            <td>${p.OREB||'-'}</td><td>${p.DREB||'-'}</td><td>${p.REB||'-'}</td>
-                            <td>${p.AST||'-'}</td><td>${p.TOV||'-'}</td><td>${p.STL||'-'}</td>
-                            <td>${p.BLK||'-'}</td><td>${p.EFF||'-'}</td><td>${p.PlusMinus||'-'}</td>
-                        </tr>`;
-                    });
-                    tHtml += `</table></div>`;
-                    return tHtml;
-                };
-
-                html += `<div class="section-title">球員數據 (Player Stats)</div>`;
-                
-                const homePlayers = players.filter(p => p.Team === basicData.HomeTeamName);
-                const awayPlayers = players.filter(p => p.Team === basicData.AwayTeamName);
-                
-                html += buildPlayerTable(basicData.HomeTeamName, homePlayers);
-                html += buildPlayerTable(basicData.AwayTeamName, awayPlayers);
-                
-                const otherPlayers = players.filter(p => p.Team !== basicData.HomeTeamName && p.Team !== basicData.AwayTeamName);
-                if(otherPlayers.length > 0) {
-                    const otherTeams = [...new Set(otherPlayers.map(p => p.Team))];
-                    otherTeams.forEach(tName => {
-                        html += buildPlayerTable(tName, otherPlayers.filter(p => p.Team === tName));
-                    });
-                }
-            } else {
-                html += `<div style="text-align:center; color:#94a3b8; margin-top:20px;">尚未登錄球員數據。</div>`;
             }
 
             stats.innerHTML = html;
