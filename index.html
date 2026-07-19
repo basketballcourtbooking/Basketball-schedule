@@ -39,7 +39,7 @@
         /* 🔥 佈局修復：改用 Flex 彈性分配，避免手機版撐破 */
         .scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 0 5px; }
         .team { display: flex; flex-direction: column; align-items: center; flex: 1; width: 0; }
-        .team-logo { width: 55px; height: 55px; min-width: 55px; min-height: 55px; flex-shrink: 0; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        .team-logo { width: 55px; height: 55px; min-width: 55px; min-height: 55px; flex-shrink: 0; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
         .team-name { font-weight: 700; font-size: 1.05em; text-align: center; color: #f8fafc; }
         
         /* 比分區塊依照內容自動撐開 */
@@ -77,11 +77,13 @@
         .media-btn.video { background-color: #be123c; border-color: #e11d48; }
 
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 25px; }
-        .q-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; white-space: nowrap; }
-        .q-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
-        .q-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
+        .q-table, .player-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; white-space: nowrap; }
+        .q-table th, .player-table th { background-color: #0f172a; color: #94a3b8; padding: 12px 10px; font-weight: 600; border-bottom: 1px solid #334155; position: sticky; top: 0; }
+        .q-table td, .player-table td { padding: 10px; border-bottom: 1px solid #334155; color: #f8fafc; }
+        .player-table tr:hover { background-color: #334155; }
         
         .section-title { margin-top: 25px; font-size: 1.1em; font-weight: bold; border-left: 4px solid #3b82f6; padding-left: 10px; }
+        .team-table-title { font-size: 1em; font-weight: bold; color: #e2e8f0; margin-top: 15px; margin-bottom: 5px; padding-left: 5px; }
         .loading-text { text-align: center; color: #3b82f6; font-weight: bold; padding: 20px; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -109,7 +111,7 @@
             /* 彈出視窗版面微調 */
             .modal-content { padding: 15px; }
             .modal-header-card { padding: 15px 10px; }
-            .q-table th, .q-table td { padding: 8px 6px; font-size: 0.85em; }
+            .q-table th, .q-table td, .player-table th, .player-table td { padding: 8px 6px; font-size: 0.85em; }
         }
     </style>
 </head>
@@ -415,6 +417,59 @@
                         </tr>
                     </table>
                 </div>`;
+            }
+
+            if(adv.players && adv.players !== "[]") {
+                const players = JSON.parse(adv.players);
+                
+                const buildPlayerTable = (teamName, teamPlayers) => {
+                    if(teamPlayers.length === 0) return '';
+                    let tHtml = `
+                        <div class="team-table-title">🏀 ${teamName}</div>
+                        <div class="table-responsive">
+                            <table class="player-table">
+                                <tr>
+                                    <th>#</th><th>姓名</th><th>MIN</th><th>PTS</th>
+                                    <th>FGM</th><th>FGA</th><th>FG%</th><th>3PM</th><th>3PA</th><th>3P%</th>
+                                    <th>2PM</th><th>2PA</th><th>2P%</th><th>FTM</th><th>FTA</th><th>FT%</th>
+                                    <th>OREB</th><th>DREB</th><th>REB</th><th>AST</th><th>TOV</th><th>STL</th>
+                                    <th>BLK</th><th>EFF</th><th>+/-</th>
+                                </tr>`;
+                    
+                    teamPlayers.forEach(p => {
+                        tHtml += `<tr>
+                            <td>${p.Number||'-'}</td><td style="font-weight:bold;">${p.Name||'-'}</td>
+                            <td>${p.MIN||'-'}</td><td style="font-weight:bold; color:#3b82f6;">${p.PTS||'-'}</td>
+                            <td>${p.FGM||'-'}</td><td>${p.FGA||'-'}</td><td>${p.FG_pct||'-'}</td>
+                            <td>${p['3PM']||'-'}</td><td>${p['3PA']||'-'}</td><td>${p['3P_pct']||'-'}</td>
+                            <td>${p['2PM']||'-'}</td><td>${p['2PA']||'-'}</td><td>${p['2P_pct']||'-'}</td>
+                            <td>${p.FTM||'-'}</td><td>${p.FTA||'-'}</td><td>${p.FT_pct||'-'}</td>
+                            <td>${p.OREB||'-'}</td><td>${p.DREB||'-'}</td><td>${p.REB||'-'}</td>
+                            <td>${p.AST||'-'}</td><td>${p.TOV||'-'}</td><td>${p.STL||'-'}</td>
+                            <td>${p.BLK||'-'}</td><td>${p.EFF||'-'}</td><td>${p.PlusMinus||'-'}</td>
+                        </tr>`;
+                    });
+                    tHtml += `</table></div>`;
+                    return tHtml;
+                };
+
+                html += `<div class="section-title">球員數據 (Player Stats)</div>`;
+                
+                const homePlayers = players.filter(p => p.Team === basicData.HomeTeamName);
+                const awayPlayers = players.filter(p => p.Team === basicData.AwayTeamName);
+                
+                html += buildPlayerTable(basicData.HomeTeamName, homePlayers);
+                html += buildPlayerTable(basicData.AwayTeamName, awayPlayers);
+                
+                const otherPlayers = players.filter(p => p.Team !== basicData.HomeTeamName && p.Team !== basicData.AwayTeamName);
+                if(otherPlayers.length > 0) {
+                    const otherTeams = [...new Set(otherPlayers.map(p => p.Team))];
+                    otherTeams.forEach(tName => {
+                        html += buildPlayerTable(tName, otherPlayers.filter(p => p.Team === tName));
+                    });
+                }
+            } else {
+                html += `<div style="text-align:center; color:#94a3b8; margin-top:20px;">尚未登錄球員數據。</div>`;
             }
 
             stats.innerHTML = html;
