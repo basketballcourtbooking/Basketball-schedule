@@ -39,7 +39,7 @@
         /* 🔥 佈局修復：改用 Flex 彈性分配，避免手機版撐破 */
         .scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 0 5px; }
         .team { display: flex; flex-direction: column; align-items: center; flex: 1; width: 0; }
-        .team-logo { width: 55px; height: 55px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .team-logo { width: 55px; height: 55px; min-width: 55px; min-height: 55px; flex-shrink: 0; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         .team-name { font-weight: 700; font-size: 1.05em; text-align: center; color: #f8fafc; }
         
         /* 比分區塊依照內容自動撐開 */
@@ -89,7 +89,7 @@
         /* 📱 🔥 手機版專屬響應式設計 (針對小於 480px 的螢幕) */
         @media (max-width: 480px) {
             .match-card { padding: 15px 10px 12px 10px; }
-            .team-logo { width: 40px; height: 40px; margin-bottom: 5px; }
+            .team-logo { width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; object-fit: contain; margin-bottom: 5px; }
             .team-name { font-size: 0.85em; }
             
             /* 分數與間距等比例縮小 */
